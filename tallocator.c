@@ -11,7 +11,7 @@
 /*Our current managed buffer. You can just delete this and make it a fixed address if you want.*/
 #define MANAGED_BUFFER_PTR tallocator_managed_buffer
 tallocator_alignment unsigned char tallocator_managed_buffer[MANAGED_SIZE];
-unsigned char tallocator_metadata[ (MANAGED_SIZE / BLOCK_SIZE) / 4] = {0};
+unsigned char tallocator_metadata[1 + ((MANAGED_SIZE / BLOCK_SIZE) / 4)] = {0};
 /*Alter these for thread safety. Re-entrancy safety also guaranteed... but it may still be possible to experience deadlock.*/
 #ifndef TALLOCATOR_MUTEX_LOCK
 #define TALLOCATOR_MUTEX_LOCK /*a comment.*/
