@@ -4,10 +4,11 @@
 #include <stdio.h>
 #endif
 
-#define MANAGED_SIZE ((size_t)1024 * 1024 * 1024 * 1)
+
 /*4 kilobytes*/
 #define BLOCK_SIZE 4096
-
+/*The managed size!*/
+#define MANAGED_SIZE ((size_t)BLOCK_SIZE * 1024 * 1024)
 
 #ifdef USE_ALIGNED
 #include <stdalign.h>
