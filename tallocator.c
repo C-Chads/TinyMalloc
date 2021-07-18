@@ -1,15 +1,22 @@
 #include "tallocator.h"
 
+#ifdef USE_ALIGNED
+#include <stdalign.h>
+#define tallocator_alignment alignas(BLOCK_SIZE)
+#else
+#define tallocator_alignment /*a comment.*/
+#endif
 
+
+/*Our current managed buffer. You can just delete this and make it a fixed address if you want.*/
+#define MANAGED_BUFFER_PTR tallocator_managed_buffer
 tallocator_alignment unsigned char tallocator_managed_buffer[MANAGED_SIZE];
 unsigned char tallocator_metadata[ (MANAGED_SIZE / BLOCK_SIZE) / 4] = {0};
-
-
+/*Alter these for thread safety. Re-entrancy safety also guaranteed... but it may still be possible to experience deadlock.*/
 #ifndef TALLOCATOR_MUTEX_LOCK
 #define TALLOCATOR_MUTEX_LOCK /*a comment.*/
 #define TALLOCATOR_MUTEX_UNLOCK /*a comment.*/
 #endif
-
 
 static void tiny_mark_blocks(size_t start, size_t nblocks){
 	tallocator_metadata[start>>2] |= (3<<((start&3)*2));
@@ -24,17 +31,11 @@ static void tiny_mark_blocks(size_t start, size_t nblocks){
 static void tiny_unmark_blocks(size_t i){
 	char have_started = 0;
 	for(;;){
-		if(have_started){
-			if(((tallocator_metadata[i/4] & (3<<((i&3)*2)))>>((i&3)*2)) != 1) {
-				break;
-			}
-		}
-		else {
-			if(((tallocator_metadata[i/4] & (3<<((i&3)*2)))>>((i&3)*2)) != 3) break;
-		}
-
-		tallocator_metadata[i/4] &= ~(3<<((i&3)*2));
-		have_started = 1;
+		if(have_started &&
+			(((tallocator_metadata[i/4] & (3<<((i&3)*2)))>>((i&3)*2)) != 1) 
+		) break;
+		else if(!have_started && ((tallocator_metadata[i/4] & (3<<((i&3)*2)))>>((i&3)*2)) != 3) break;
+		tallocator_metadata[i/4] &= ~(3<<((i&3)*2)); have_started = 1;
 		i++;
 	}
 }
